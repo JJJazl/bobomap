@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Welcome to Bobomap</title>
@@ -59,7 +59,7 @@
 
         // Make a POST request to save the name on the server
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/save-name", true);
+        xhr.open("POST", "/map/save-name", true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {

@@ -1,24 +1,33 @@
 package com.example.bobomap;
 
 import com.example.bobomap.dto.Marker;
+import com.example.bobomap.dto.UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping
+@RequestMapping("/map")
 @RequiredArgsConstructor
 public class MapController {
 
     private final MapService mapService;
 
-    @GetMapping("/welcome")
-    public ResponseEntity<?> createNewMap() {
+    @PostMapping("/save-name")
+    public ResponseEntity<?> createNewMap(@RequestBody UserDto userDto) {
+        String location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(mapService.createMap())
+                .toString();
+        System.out.println(location);
+
         return ResponseEntity
-                .created(URI.create(mapService.createMap()))
+                .created(URI.create(location))
                 .build();
     }
 
