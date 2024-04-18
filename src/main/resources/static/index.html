@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Display Current Position with Mapbox</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+
+<script>
+    // Initialize the Mapbox map
+    mapboxgl.accessToken = 'pk.eyJ1Ijoia2hzaGFub3Zza3lpIiwiYSI6ImNsdjRybG5xdzAwMGMyaXByMDl3N3JycHMifQ.BKKnYGOV_YzYYtMjb2Q_Ew';
+    var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11', // Choose the map style
+        center: [0, 0], // Default center (longitude, latitude)
+        zoom: 15 // Default zoom level
+    });
+
+    // Get the user's current location
+    navigator.geolocation.getCurrentPosition(successLocation, errorLocation, {
+        enableHighAccuracy: true
+    });
+
+    // Callback function for successful location retrieval
+    function successLocation(position) {
+        var { longitude, latitude } = position.coords;
+
+        // Set the map's center to the user's current location
+        map.setCenter([longitude, latitude]);
+
+        // Add a marker at the user's current location
+        new mapboxgl.Marker().setLngLat([longitude, latitude]).addTo(map);
+    }
+
+    // Callback function for location retrieval error
+    function errorLocation() {
+        console.error('Unable to retrieve your location');
+    }
+</script>
+
+</body>
+</html>
