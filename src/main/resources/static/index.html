@@ -9,15 +9,23 @@
     <style>
         body { margin: 0; padding: 0; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        #overlay { position: absolute; top: 10px; left: 10px; background-color: rgba(255, 255, 255, 0.8); padding: 10px; }
     </style>
 </head>
 <body>
 
 <div id='map'></div>
+<div id='overlay'>
+    <label for='name'>Enter your name:</label>
+    <input type='text' id='name' name='name'>
+    <button onclick='confirmGeolocationAndSendData()'>Confirm and Send Data</button>
+</div>
 
 <script>
+    var nameInput = document.getElementById('name');
+
     // Initialize the Mapbox map
-    mapboxgl.accessToken = 'pk.eyJ1Ijoia2hzaGFub3Zza3lpIiwiYSI6ImNsdjRybG5xdzAwMGMyaXByMDl3N3JycHMifQ.BKKnYGOV_YzYYtMjb2Q_Ew';
+    mapboxgl.accessToken = 'pk.eyJ1Ijoicm9tYW4tbm92b3NhZCIsImEiOiJjbHY1aHZkM20wMnQ4MmtvYjIzNjU2OW5iIn0.XCckF_73eU_qDSFpEXYuuQ';
     var map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v11', // Choose the map style
@@ -25,25 +33,41 @@
         zoom: 15 // Default zoom level
     });
 
-    // Get the user's current location
-    navigator.geolocation.getCurrentPosition(successLocation, errorLocation, {
-        enableHighAccuracy: true
-    });
+    // Function to confirm geolocation access and send data to the server
+    function confirmGeolocationAndSendData() {
+        // Check if geolocation access is granted
+        if ("geolocation" in navigator) {
+            // Prompt user to allow geolocation access
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var { longitude, latitude } = position.coords;
+                var name = nameInput.value;
 
-    // Callback function for successful location retrieval
-    function successLocation(position) {
-        var { longitude, latitude } = position.coords;
-
-        // Set the map's center to the user's current location
-        map.setCenter([longitude, latitude]);
-
-        // Add a marker at the user's current location
-        new mapboxgl.Marker().setLngLat([longitude, latitude]).addTo(map);
+                // Send the position and name to the serve
+                sendPositionAndNameToServer(longitude, latitude, name);
+                console.log("success")
+            }, function(error) {
+                console.error('Error getting geolocation:', error);
+            }, {
+                enableHighAccuracy: true
+            });
+        } else {
+            console.error('Geolocation is not supported by this browser.');
+        }
     }
 
-    // Callback function for location retrieval error
-    function errorLocation() {
-        console.error('Unable to retrieve your location');
+    // Function to send the position and name to the server
+    function sendPositionAndNameToServer(longitude, latitude, name) {
+        // Make a POST request to your server with longitude, latitude, and name
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/save-data", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                console.log("Data sent successfully.");
+            }
+        };
+        var data = JSON.stringify({ longitude: longitude, latitude: latitude, name: name });
+        xhr.send(data);
     }
 </script>
 
