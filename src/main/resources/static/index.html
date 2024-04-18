@@ -1,72 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset='utf-8' />
-    <title>Display Current Position with Mapbox</title>
-    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css' rel='stylesheet' />
+    <meta charset="UTF-8">
+    <title>Welcome to Bobomap</title>
     <style>
-        body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        #overlay { position: absolute; top: 10px; left: 10px; background-color: rgba(255, 255, 255, 0.8); padding: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
 
-<div id='map'></div>
-<div id='overlay'>
-    <label for='name'>Enter your name:</label>
-    <input type='text' id='name' name='name'>
-    <button onclick='confirmGeolocationAndSendData()'>Confirm and Send Data</button>
-</div>
+<form id="welcomeForm" onsubmit="submitForm(event)">
+    <label for="name">Enter your name:</label>
+    <input type="text" id="name" name="name" required>
+    <button type="submit">Submit</button>
+</form>
 
 <script>
-    var nameInput = document.getElementById('name');
+    function submitForm(event) {
+        event.preventDefault();
 
-    // Initialize the Mapbox map
-    mapboxgl.accessToken = 'pk.eyJ1Ijoicm9tYW4tbm92b3NhZCIsImEiOiJjbHY1aHZkM20wMnQ4MmtvYjIzNjU2OW5iIn0.XCckF_73eU_qDSFpEXYuuQ';
-    var map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v11', // Choose the map style
-        center: [0, 0], // Default center (longitude, latitude)
-        zoom: 15 // Default zoom level
-    });
+        var name = document.getElementById("name").value;
 
-    // Function to confirm geolocation access and send data to the server
-    function confirmGeolocationAndSendData() {
-        // Check if geolocation access is granted
-        if ("geolocation" in navigator) {
-            // Prompt user to allow geolocation access
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var { longitude, latitude } = position.coords;
-                var name = nameInput.value;
-
-                // Send the position and name to the serve
-                sendPositionAndNameToServer(longitude, latitude, name);
-                console.log("success")
-            }, function(error) {
-                console.error('Error getting geolocation:', error);
-            }, {
-                enableHighAccuracy: true
-            });
-        } else {
-            console.error('Geolocation is not supported by this browser.');
-        }
-    }
-
-    // Function to send the position and name to the server
-    function sendPositionAndNameToServer(longitude, latitude, name) {
-        // Make a POST request to your server with longitude, latitude, and name
+        // Make a POST request to save the name on the server
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/save-data", true);
+        xhr.open("POST", "/save-name", true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                console.log("Data sent successfully.");
+                console.log("Name saved successfully.");
+                // Redirect to the main page or perform any other action
+                window.location.href = "/main";
             }
         };
-        var data = JSON.stringify({ longitude: longitude, latitude: latitude, name: name });
+        var data = JSON.stringify({ name: name });
         xhr.send(data);
     }
 </script>
