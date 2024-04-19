@@ -1,13 +1,13 @@
 package com.example.bobomap;
 
 import com.example.bobomap.dto.Marker;
-import com.example.bobomap.dto.UserDto;
+import com.example.bobomap.dto.UserLocationDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -17,27 +17,33 @@ public class MapController {
 
     private final MapService mapService;
 
-    @PostMapping("/save-name")
-    public ResponseEntity<?> createNewMap(@RequestBody UserDto userDto) {
-        String location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(mapService.createMap())
-                .toString();
-        System.out.println(location);
-
-        return ResponseEntity
-                .created(URI.create(location))
-                .build();
+    private String getLocation(UserLocationDto dto) {
+        return ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/map.html")
+                .queryParam("mapId", mapService.createMap(dto))
+                .toUriString();
     }
 
-    @PostMapping("/{mapId}/save-data")
-    public void saveMarkerByMapId(@PathVariable String mapId, @RequestBody Marker marker) {
+    @PostMapping()
+    public ResponseEntity<String> saveNew(@RequestBody UserLocationDto dto) {
+        System.out.println(dto);
+        var location = getLocation(dto);
+        System.out.println(location);
+        return new ResponseEntity<>(location, HttpStatus.OK);
+    }
+
+    @PostMapping("/{mapId}")
+    public void save(@PathVariable String mapId, @RequestBody UserLocationDto dto) {
+        Marker marker = new Marker(dto.getName(), dto.getLatitude(), dto.getLongitude());
         mapService.addMarker(mapId, marker);
     }
 
     @GetMapping("/{mapId}")
-    public List<Marker> getMap(@PathVariable String mapId) {
-        return mapService.getMarkersByMapId(mapId);
+    public ResponseEntity<List<Marker>> getMarkersByMapId(@PathVariable String mapId) {
+        System.out.println(mapId);
+        List<Marker> markers = mapService.getMarkersByMapId(mapId);
+        System.out.println(markers);
+        return new ResponseEntity<>(markers, HttpStatus.OK);
     }
 }

@@ -6,8 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class Marker {
-//    private String id;
     private String name;
-    private double latitude;
-    private double longitude;
+    private String latitude;
+    private String longitude;
 }

@@ -15,9 +15,11 @@ public class MapService {
 
     private Map<String, List<Marker>> markers = new ConcurrentHashMap<>();
 
-    public String createMap() {
+    public String createMap(UserLocationDto dto) {
         String mapId = UUID.randomUUID().toString();
-        markers.put(mapId, new ArrayList<>());
+        Marker marker = new Marker(dto.getName(), dto.getLatitude(), dto.getLongitude());
+
+        markers.computeIfAbsent(mapId, k -> new ArrayList<>()).add(marker);
 
         return mapId;
     }

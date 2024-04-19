@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset='utf-8' />
-    <title>Display Current Position with Mapbox</title>
+    <title>Display Markers with Mapbox</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css' rel='stylesheet' />
@@ -10,7 +10,19 @@
         body { margin: 0; padding: 0; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
         #overlay { position: absolute; top: 10px; left: 10px; background-color: rgba(255, 255, 255, 0.8); padding: 10px; z-index: 1000; }
-        #urlDisplay { margin-top: 10px; }
+        /* Customizing popup appearance */
+        .mapboxgl-popup {
+            max-width: 300px;
+            font-family: Arial, sans-serif;
+        }
+        .mapboxgl-popup-content {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+        }
+        #message { margin-top: 10px; color: #4CAF50; font-size: 16px; }
+
     </style>
 </head>
 <body>
@@ -20,11 +32,12 @@
     <label for='name'>Enter your name:</label>
     <input type='text' id='name' name='name'>
     <button onclick='confirmGeolocationAndSendData()'>Confirm and Send Data</button>
-    <div id='urlDisplay'></div>
+    <div id='message'></div> <!-- Message element -->
 </div>
 
 <script>
     var nameInput = document.getElementById('name');
+    var messageElement = document.getElementById('message'); // Reference to the message element
     var longitude = null;
     var latitude = null;
 
@@ -52,6 +65,9 @@
 
         // Add a marker at the user's current location
         new mapboxgl.Marker().setLngLat([longitude, latitude]).addTo(map);
+
+        // Fetch and display all markers
+        fetchMarkers();
     }
 
     // Callback function for location retrieval error
@@ -70,42 +86,62 @@
         }
     }
 
+    // Function to extract query parameters from the URL
+    function getQueryParameter(name) {
+        // Get the query string from the URL
+        var queryString = window.location.search;
+
+        // Remove the leading '?' character
+        queryString = queryString.substring(1);
+
+        // Parse the query string into key-value pairs
+        var urlParams = new URLSearchParams(queryString);
+
+        // Return the value of the specified parameter
+        return urlParams.get(name);
+    }
+
+    // Extract the mapId from the URL query parameters
+    var mapId = getQueryParameter('mapId');
+
     // Function to send the position and name to the server
     function sendPositionToServer(longitude, latitude, name) {
         // Make a POST request to your server with longitude, latitude, and name
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/map", true);
+        xhr.open("POST", "/map/" + mapId, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                // Parse the response and display the URL
-                var response = xhr.responseText;
-                displayUrl(response);
+                messageElement.innerText = 'Your information has been stored and a marker has been added.';
+                // Fetch and display all markers including the new one
+                fetchMarkers();
             }
         };
         var data = JSON.stringify({ longitude: longitude, latitude: latitude, name: name });
         xhr.send(data);
     }
 
-    // Function to display the URL on the HTML page
-    // Function to display the URL on the HTML page
-    function displayUrl(url) {
-        var urlDisplay = document.getElementById('urlDisplay');
-        var link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.innerText = 'Click here to get your map URL';
-        link.style.cursor = 'pointer';
-        link.onclick = function () {
-            // Copy URL to clipboard
-            navigator.clipboard.writeText(url).then(function () {
-                console.log('URL copied to clipboard');
-            }, function (err) {
-                console.error('Error copying URL to clipboard: ', err);
-            });
-        };
-        urlDisplay.innerHTML = '';
-        urlDisplay.appendChild(link);
+    // Function to fetch markers from the server and display them on the map
+    function fetchMarkers() {
+        // Extract the mapId from the URL query parameters
+        var mapId = getQueryParameter('mapId');
+
+        // Fetch markers from the server using the mapId and display them on the map
+        fetch(`/map/${mapId}`)
+            .then(response => response.json())
+            .then(markers => {
+                // Clear existing markers
+                document.querySelectorAll('.mapboxgl-marker').forEach(marker => marker.remove());
+
+                // Add markers to the map
+                markers.forEach(marker => {
+                    new mapboxgl.Marker()
+                        .setLngLat([marker.longitude, marker.latitude])
+                        .setPopup(new mapboxgl.Popup().setText(marker.name))
+                        .addTo(map);
+                });
+            })
+            .catch(error => console.error('Error fetching markers:', error));
     }
 </script>
 
